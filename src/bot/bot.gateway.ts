@@ -26,7 +26,9 @@ export class BotGateway {
           (message.content?.includes('Name') ?? false)
         )
       ) {
-        await message.reply('You are missing to mention the name!');
+        await message.reply(
+          'You are missing to mention the name! Please, redo the entire template again to validate!',
+        );
       } else if (
         !(
           (message.content?.includes('age') ?? false) ||
@@ -110,7 +112,7 @@ export class BotGateway {
 }
 function ageValidator(content: string) {
   if (content.length === 0) return true;
-  const ageMatch = content.match(/age\s*:\s*(\d+)/i);
+  const ageMatch = content.match(/age\s*:\s*[^0-9]*(\d+)/i);
   if (ageMatch != null) {
     const age = ageMatch[1];
     if (parseInt(age) > 18 && parseInt(age) < 100) return false;
@@ -122,9 +124,10 @@ function ageValidator(content: string) {
 
 function secretCodeValidator(content: string) {
   if (content.length === 0) return true;
-  const codeMatch = content.match(/secret\s*code\s*:\s*([^\n\r]+)/i);
+  const codeMatch = content.match(/secret\s*code\s*:\s*[^a-zA-Z]*([^\n\r]+)/i);
+  console.log(codeMatch);
   if (codeMatch != null) {
-    const code = codeMatch[1].trim().toLowerCase();
+    const code = codeMatch[1].trim().toLowerCase().split('*')[0];
     return !(code === 'ball gag' || code === 'ballgag');
   }
   return true;
