@@ -125,10 +125,9 @@ function ageValidator(content: string) {
 function secretCodeValidator(content: string) {
   if (content.length === 0) return true;
   const codeMatch = content.match(/secret\s*code\s*:\s*[^a-zA-Z]*([^\n\r]+)/i);
-  console.log(codeMatch);
   if (codeMatch != null) {
     const code = codeMatch[1].trim().toLowerCase().split('*')[0];
-    return !(code === 'ball gag' || code === 'ballgag');
+    return !(code.includes('ball gag') || code.includes('ballgag'));
   }
   return true;
 }
