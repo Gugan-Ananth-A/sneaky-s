@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { DiscordModule } from 'node_modules/@discord-nestjs/core/dist';
 import { ConfigModule } from 'node_modules/@nestjs/config';
-import { DiscordConfigService } from './helper/discord-config.service';
 import { BotModule } from './bot/bot.module';
 import { dataSourceOptions } from './db/config/datasource.config';
 import { TypeOrmModule } from 'node_modules/@nestjs/typeorm';
 import { UsersModule } from './user/user.module';
 import { BondageModule } from './bondage/bondage.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { SharedDiscordModule } from './helper/shared-discord.module';
 
 @Module({
   imports: [
@@ -14,9 +14,8 @@ import { BondageModule } from './bondage/bondage.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    DiscordModule.forRootAsync({
-      useClass: DiscordConfigService,
-    }),
+    ScheduleModule.forRoot(),
+    SharedDiscordModule,
     TypeOrmModule.forRoot(dataSourceOptions),
     BotModule,
     UsersModule,

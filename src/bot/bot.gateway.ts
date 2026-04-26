@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Once, InjectDiscordClient, On } from '@discord-nestjs/core';
-import { Client, Message } from 'discord.js';
+import { Client, GuildMember, Message, TextChannel } from 'discord.js';
+import { BondageService } from 'src/bondage/bondage.service';
 
 @Injectable()
 export class BotGateway {
@@ -9,6 +10,7 @@ export class BotGateway {
   constructor(
     @InjectDiscordClient()
     private readonly client: Client,
+    private bondageService: BondageService,
   ) {}
 
   @Once('ready')
@@ -132,9 +134,93 @@ export class BotGateway {
         await message.react('✅');
         await message.member.roles.add('1409579308934234195');
       }
+    } else {
+      const cageChannel = await this.bondageService.isCageChannel(
+        message.channel.id,
+      );
+      if (message.content.toLocaleLowerCase() === cageChannel?.safeword) {
+        await this.bondageService.handleSafeword(
+          message.author.id,
+          cageChannel.channelId,
+          message.member ?? undefined,
+        );
+      }
+      if (
+        ((cageChannel?.gag ?? false) || (cageChannel?.blindfold ?? false)) &&
+        message.channel instanceof TextChannel
+      ) {
+        await message.delete().catch(() => null);
+
+        if (
+          (cageChannel?.gag ?? false) &&
+          cageChannel?.userId === message.author.id
+        ) {
+          const webhook = await message.channel.createWebhook({
+            name: message.member?.displayName || message.author.username,
+            avatar: message.author.displayAvatarURL(),
+          });
+          const garbledText = garbleText(message);
+          await webhook.send({
+            content: garbledText,
+          });
+
+          await webhook.delete();
+          return;
+        } else if (
+          (cageChannel?.blindfold ?? false) &&
+          cageChannel?.userId !== message.author.id
+        ) {
+          const webhook = await message.channel.createWebhook({
+            name: getPersonaName(message.member as GuildMember),
+            avatar: message.author.displayAvatarURL(),
+          });
+
+          await webhook.send({
+            content: message.content,
+          });
+
+          await webhook.delete();
+          return;
+        }
+      }
     }
   }
 }
+
+function getPersonaName(member: GuildMember): string {
+  const roles = member.roles.cache.map((r) => r.name.toLowerCase());
+
+  const powerRoles = ['dominant', 'submissive', 'switch'];
+  const identityRoles = ['male', 'female', 'other'];
+
+  const power = powerRoles.find((r) => roles.includes(r));
+  const identity = identityRoles.find((r) => roles.includes(r));
+
+  const finalPower = power ?? 'mysterious';
+  const finalIdentity = identity ?? 'being';
+
+  return `A ${finalPower} ${finalIdentity}`;
+}
+
+function garbleText(message: Message) {
+  const text = message.content;
+
+  const vowels = 'aeiou';
+  const muffledSounds = ['m', 'n', 'ng', 'mm', 'nn'];
+
+  return `${text
+    .split('')
+    .map((char) => {
+      const lower = char.toLowerCase();
+      if (!/[a-z]/i.test(char)) return char;
+      if (vowels.includes(lower)) {
+        return muffledSounds[Math.floor(Math.random() * muffledSounds.length)];
+      }
+      return Math.random() > 0.9 ? 'm' : char;
+    })
+    .join('')}\n\n||*${message.content}*||`;
+}
+
 function ageValidator(content: string) {
   if (content.length === 0) return true;
   const ageMatch = content.match(/age\s*:?\s*[^0-9]*(\d+)/i);

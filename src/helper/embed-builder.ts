@@ -5,8 +5,8 @@ import { UserSettings } from 'src/user/user-settings.entity';
 export function createSettingsEmbed(settings?: UserSettings): EmbedBuilder {
   return new EmbedBuilder()
     .setColor(0x941900)
-    .setTitle('Your Self-Bondage Settings')
-    .setDescription('Your preferences have been saved!')
+    .setTitle('Self-Bondage Settings')
+    .setDescription('Your preferences have been saved')
     .addFields(
       {
         name: 'Gag',
@@ -36,8 +36,8 @@ export function createSettingsEmbed(settings?: UserSettings): EmbedBuilder {
 export function createProfileEmbed(settings?: UserSettings): EmbedBuilder {
   return new EmbedBuilder()
     .setColor(0x941900)
-    .setTitle('Your Self-Bondage Profile!')
-    .setDescription('Your preferences are as follows!')
+    .setTitle('Self-Bondage Profile')
+    .setDescription('Your preferences are as follows')
     .addFields(
       {
         name: 'Gag',
@@ -66,7 +66,7 @@ export function createProfileEmbed(settings?: UserSettings): EmbedBuilder {
 
 export function createSessionEmbed(session?: ActiveSession): EmbedBuilder {
   const date = new Date();
-  date.setMinutes(date.getMinutes() + 30);
+  date.setMinutes(date.getMinutes() + (session?.duration ?? 30));
 
   const endTime = new Date(
     session?.endTime?.getTime() ?? date.getTime(),
@@ -86,11 +86,11 @@ export function createSessionEmbed(session?: ActiveSession): EmbedBuilder {
       { name: 'End Time', value: endTime, inline: true },
       {
         name: 'Restrictions',
-        value: `${session?.gag ? 'Gag\n' : ''}${session?.blindfold ? 'Blindfold\n' : ''}`,
+        value: `${session?.gag ? 'Gag\n' : 'Not Gagged\n'}${session?.blindfold ? 'Blindfold\n' : 'Not Blindfolded\n'}`,
       },
       {
         name: 'Safeword',
-        value: `Use \`/safeword\` if you need to escape`,
+        value: `Use \`/safeword\` or **${session?.safeword ?? 'Red'}** if you need to escape`,
       },
     )
     .setFooter({ text: `Session ID: ${session?.id}` })

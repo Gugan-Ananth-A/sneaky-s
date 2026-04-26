@@ -5,14 +5,20 @@ export class ActiveSession {
   @PrimaryGeneratedColumn('uuid')
   id?: string;
 
-  @Column()
+  @Column({ unique: true })
   userId?: string;
 
   @Column()
   guildId?: string;
 
-  @Column({ type: 'varchar', length: 1000 })
-  description?: string;
+  @Column({ type: 'text', nullable: true, default: null })
+  bondageDescription?: string;
+
+  @Column({ type: 'text', nullable: true, default: null })
+  gagDescription?: string;
+
+  @Column({ type: 'text', nullable: true, default: null })
+  blindfoldDescription?: string;
 
   @Column()
   channelId?: string;
