@@ -7,6 +7,7 @@ import { BondageCommand } from './bondage.command';
 import { SafewordCommand } from './safeword.command';
 import { ReleaseCronService } from './release.service';
 import { SharedDiscordModule } from 'src/helper/shared-discord.module';
+import { BindCommand } from './bind.command';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { SharedDiscordModule } from 'src/helper/shared-discord.module';
     BondageService,
     ReleaseCronService,
     BondageCommand,
+    BindCommand,
     SafewordCommand,
   ],
   exports: [BondageService],

@@ -67,16 +67,7 @@ export class BondageCommand {
       const embed = createSessionEmbed(session);
       await interaction.followUp({ embeds: [embed] });
 
-      for (const roleId of session.originalRoles ?? []) {
-        if (roleId !== interaction.guild?.id) {
-          try {
-            await member.roles.remove(roleId);
-          } catch (e) {
-            console.log(`Could not remove role ${roleId}: ${e}`);
-          }
-        }
-      }
-
+      await member.roles.set([]);
       await member.roles.add('1497994703050903735');
 
       if (channel && channel.isTextBased()) {

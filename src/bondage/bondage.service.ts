@@ -24,6 +24,7 @@ export class BondageService {
     guildId: string,
     channelId: string,
     member: GuildMember,
+    bondageDescription?: string,
   ) {
     let settings = await this.userSettingsRepository.findOne({
       where: { userId },
@@ -39,7 +40,6 @@ export class BondageService {
       });
       await this.userSettingsRepository.save(settings);
     }
-    console.log(settings);
     const scenarioDescription = this.getRandomScenario();
     const originalRoles = member.roles.cache.map((role) => role.id);
     const session = this.activeSessionRepository.create({
@@ -51,7 +51,8 @@ export class BondageService {
       endTime: new Date(
         Date.now() + (settings?.defaultDuration ?? 30) * 60 * 1000,
       ),
-      bondageDescription: `${scenarioDescription.bondage}`,
+      bondageDescription:
+        bondageDescription ?? `${scenarioDescription.bondage}`,
       gagDescription: `${scenarioDescription.gag}`,
       blindfoldDescription: `${scenarioDescription.blindfold}`,
       gag: settings.gag ?? false,

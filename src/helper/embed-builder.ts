@@ -67,10 +67,11 @@ export function createProfileEmbed(settings?: UserSettings): EmbedBuilder {
 export function createSessionEmbed(session?: ActiveSession): EmbedBuilder {
   const date = new Date();
   date.setMinutes(date.getMinutes() + (session?.duration ?? 30));
+  const endDate = new Date(session?.endTime?.getTime() ?? date.getTime());
 
-  const endTime = new Date(
-    session?.endTime?.getTime() ?? date.getTime(),
-  ).toLocaleTimeString();
+  const endTimeUnix = Math.floor(endDate.getTime() / 1000);
+  const endTime = `<t:${endTimeUnix}:t>`;
+  const endTimeRelative = `<t:${endTimeUnix}:R>`;
 
   const durationMinutes = Math.round((date.getTime() - Date.now()) / 60000);
 
@@ -83,7 +84,11 @@ export function createSessionEmbed(session?: ActiveSession): EmbedBuilder {
         value: `${durationMinutes} minutes`,
         inline: true,
       },
-      { name: 'End Time', value: endTime, inline: true },
+      {
+        name: 'End Time',
+        value: `${endTime} (${endTimeRelative})`,
+        inline: true,
+      },
       {
         name: 'Restrictions',
         value: `${session?.gag ? 'Gag\n' : 'Not Gagged\n'}${session?.blindfold ? 'Blindfold\n' : 'Not Blindfolded\n'}`,
@@ -95,4 +100,58 @@ export function createSessionEmbed(session?: ActiveSession): EmbedBuilder {
     )
     .setFooter({ text: `Session ID: ${session?.id}` })
     .setTimestamp();
+}
+
+type BindQuestion = {
+  target: string;
+  prompt: string;
+  options: readonly string[];
+};
+
+export function createCustomSessionEmbed(
+  session?: ActiveSession,
+  answers?: { question: BindQuestion; answer: string }[],
+): EmbedBuilder {
+  const date = new Date();
+  date.setMinutes(date.getMinutes() + (session?.duration ?? 30));
+
+  const endDate = new Date(session?.endTime?.getTime() ?? date.getTime());
+  const endTimeUnix = Math.floor(endDate.getTime() / 1000);
+  const endTime = `<t:${endTimeUnix}:t>`;
+  const endTimeRelative = `<t:${endTimeUnix}:R>`;
+
+  const durationMinutes = Math.round((date.getTime() - Date.now()) / 60000);
+
+  const embed = new EmbedBuilder()
+    .setColor(0x941900)
+    .setTitle('Bondage Session Started!')
+    .addFields(
+      {
+        name: 'Duration',
+        value: `${durationMinutes} minutes`,
+        inline: true,
+      },
+      {
+        name: 'End Time',
+        value: `${endTime} (${endTimeRelative})`,
+        inline: true,
+      },
+    )
+    .setFooter({ text: `Session ID: ${session?.id}` })
+    .setTimestamp();
+
+  if (answers?.length) {
+    const fields = answers.map((a) => ({
+      name: a.question.target,
+      value: a.answer || 'No response',
+      inline: true,
+    }));
+
+    embed.addFields(fields);
+  }
+
+  return embed.addFields({
+    name: 'Safeword',
+    value: `Use \`/safeword\` or **${session?.safeword ?? 'Red'}** if you need to escape`,
+  });
 }
