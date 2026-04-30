@@ -8,6 +8,12 @@ import { Client, GuildMember } from 'discord.js';
 import { BondageScenario } from './bondage-scenarios';
 import { InjectDiscordClient } from '@discord-nestjs/core';
 
+type StartSessionOptions = {
+  bondageDescription?: string;
+  gag?: boolean;
+  blindfold?: boolean;
+};
+
 @Injectable()
 export class BondageService {
   constructor(
@@ -24,7 +30,7 @@ export class BondageService {
     guildId: string,
     channelId: string,
     member: GuildMember,
-    bondageDescription?: string,
+    options: StartSessionOptions = {},
   ) {
     let settings = await this.userSettingsRepository.findOne({
       where: { userId },
@@ -33,8 +39,6 @@ export class BondageService {
     if (!settings) {
       settings = this.userSettingsRepository.create({
         userId,
-        gag: false,
-        blindfold: false,
         defaultDuration: 30,
         safeword: 'red',
       });
@@ -52,11 +56,11 @@ export class BondageService {
         Date.now() + (settings?.defaultDuration ?? 30) * 60 * 1000,
       ),
       bondageDescription:
-        bondageDescription ?? `${scenarioDescription.bondage}`,
+        options.bondageDescription ?? `${scenarioDescription.bondage}`,
       gagDescription: `${scenarioDescription.gag}`,
       blindfoldDescription: `${scenarioDescription.blindfold}`,
-      gag: settings.gag ?? false,
-      blindfold: settings.blindfold ?? false,
+      gag: options.gag ?? false,
+      blindfold: options.blindfold ?? false,
       duration: settings.defaultDuration ?? 30,
       safeword: settings.safeword ?? 'red',
       status: 'active',

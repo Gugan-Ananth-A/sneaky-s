@@ -1,8 +1,10 @@
 import { Command, Handler, InteractionEvent } from '@discord-nestjs/core/dist';
-import { Injectable } from '@nestjs/common';
+import { SlashCommandPipe } from '@discord-nestjs/common';
+import { Injectable, PipeTransform, Type } from '@nestjs/common';
 import { ChatInputCommandInteraction, GuildMember } from 'discord.js';
 import { BondageService } from './bondage.service';
 import { createSessionEmbed } from 'src/helper/embed-builder';
+import { BindMeDto } from './dto/bind-me.dto';
 
 @Command({
   name: 'bind-me',
@@ -15,6 +17,8 @@ export class BondageCommand {
   @Handler()
   async onBondage(
     @InteractionEvent() interaction: ChatInputCommandInteraction,
+    @InteractionEvent(SlashCommandPipe as unknown as Type<PipeTransform>)
+    options: BindMeDto,
   ): Promise<void> {
     await interaction.deferReply();
     try {
@@ -62,6 +66,10 @@ export class BondageCommand {
         interaction?.guildId ?? '',
         channel?.id,
         member,
+        {
+          gag: this.isYes(options?.gag),
+          blindfold: this.isYes(options?.blindfold),
+        },
       );
 
       const embed = createSessionEmbed(session);
@@ -99,5 +107,9 @@ export class BondageCommand {
         ephemeral: true,
       });
     }
+  }
+
+  private isYes(value?: number): boolean {
+    return value === 0;
   }
 }

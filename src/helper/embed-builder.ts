@@ -2,22 +2,16 @@ import { EmbedBuilder } from 'discord.js';
 import { ActiveSession } from 'src/bondage/active-session.entity';
 import { UserSettings } from 'src/user/user-settings.entity';
 
+function createRestrictionsValue(session?: ActiveSession): string {
+  return `${session?.gag ? 'Gag\n' : 'Not Gagged\n'}${session?.blindfold ? 'Blindfold\n' : 'Not Blindfolded\n'}`;
+}
+
 export function createSettingsEmbed(settings?: UserSettings): EmbedBuilder {
   return new EmbedBuilder()
     .setColor(0x941900)
     .setTitle('Self-Bondage Settings')
     .setDescription('Your preferences have been saved')
     .addFields(
-      {
-        name: 'Gag',
-        value: (settings?.gag ?? false) ? '✅ Enabled' : '❌ Disabled',
-        inline: true,
-      },
-      {
-        name: 'Blindfold',
-        value: (settings?.blindfold ?? false) ? '✅ Enabled' : '❌ Disabled',
-        inline: true,
-      },
       {
         name: 'Bondage Duration',
         value: `${settings?.defaultDuration ?? 30} minutes`,
@@ -39,16 +33,6 @@ export function createProfileEmbed(settings?: UserSettings): EmbedBuilder {
     .setTitle('Self-Bondage Profile')
     .setDescription('Your preferences are as follows')
     .addFields(
-      {
-        name: 'Gag',
-        value: (settings?.gag ?? false) ? '✅ Enabled' : '❌ Disabled',
-        inline: true,
-      },
-      {
-        name: 'Blindfold',
-        value: (settings?.blindfold ?? false) ? '✅ Enabled' : '❌ Disabled',
-        inline: true,
-      },
       {
         name: 'Bondage Duration',
         value: `${settings?.defaultDuration ?? 30} minutes`,
@@ -91,7 +75,7 @@ export function createSessionEmbed(session?: ActiveSession): EmbedBuilder {
       },
       {
         name: 'Restrictions',
-        value: `${session?.gag ? 'Gag\n' : 'Not Gagged\n'}${session?.blindfold ? 'Blindfold\n' : 'Not Blindfolded\n'}`,
+        value: createRestrictionsValue(session),
       },
       {
         name: 'Safeword',
@@ -135,6 +119,10 @@ export function createCustomSessionEmbed(
         name: 'End Time',
         value: `${endTime} (${endTimeRelative})`,
         inline: true,
+      },
+      {
+        name: 'Restrictions',
+        value: createRestrictionsValue(session),
       },
     )
     .setFooter({ text: `Session ID: ${session?.id}` })

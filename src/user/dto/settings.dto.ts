@@ -1,25 +1,6 @@
-import { Choice, Param, ParamType } from '@discord-nestjs/core';
-import { Yno } from './yno';
+import { Param, ParamType } from '@discord-nestjs/core';
 
 export class SettingsDto {
-  @Choice(Yno)
-  @Param({
-    name: 'gag',
-    type: ParamType.INTEGER,
-    required: false,
-    description: 'If you want to get gagged or not? (default: false)',
-  })
-  gag?: number;
-
-  @Choice(Yno)
-  @Param({
-    name: 'blindfold',
-    type: ParamType.INTEGER,
-    required: false,
-    description: 'If you want to get blindfolded or not? (default: false)',
-  })
-  blindfold?: number;
-
   @Param({
     name: 'duration',
     type: ParamType.INTEGER,

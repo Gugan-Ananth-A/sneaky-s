@@ -24,9 +24,6 @@ export class UserSettingsCommand {
     try {
       const userId = interaction.user.id;
       const savedSettings = await this.userService.updateUserSettings(userId, {
-        gag: options.gag === undefined ? undefined : options.gag === 0,
-        blindfold:
-          options.blindfold === undefined ? undefined : options.blindfold === 0,
         defaultDuration: options.duration,
         safeword: options.safeword,
       });

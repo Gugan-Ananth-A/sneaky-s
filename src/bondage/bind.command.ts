@@ -17,6 +17,11 @@ type BindQuestion = {
   options: readonly string[];
 };
 
+type BindAnswer = {
+  question: BindQuestion;
+  answer: string;
+};
+
 const STANDARD_OPTIONS = [
   'Rope',
   'Transparent Tape',
@@ -193,6 +198,12 @@ const READY_QUESTION: BindQuestion = {
   options: ['Yes', 'No'],
 };
 
+const GAG_TARGETS = new Set([
+  'Mouth Stuffing',
+  'Mouth Gag',
+  'Additional Gag Layer',
+]);
+
 @Command({
   name: 'bind',
   description: 'Customize how you like to get tied up~',
@@ -244,7 +255,7 @@ export class BindCommand {
         return;
       }
 
-      const answers: { question: BindQuestion; answer: string }[] = [];
+      const answers: BindAnswer[] = [];
 
       for (const question of BIND_QUESTIONS.values()) {
         const answer = await this.askQuestion(
@@ -345,9 +356,7 @@ export class BindCommand {
       .replace(/[\s_-]+/g, '');
   }
 
-  private createBondageDescription(
-    answers: { question: BindQuestion; answer: string }[],
-  ): string {
+  private createBondageDescription(answers: BindAnswer[]): string {
     const selectedAnswers = answers.filter(
       ({ answer }) => this.normalizeOption(answer) !== 'skip',
     );
@@ -374,7 +383,7 @@ export class BindCommand {
   private async createCageSession(
     interaction: ChatInputCommandInteraction,
     member: GuildMember,
-    answers: { question: BindQuestion; answer: string }[],
+    answers: BindAnswer[],
   ): Promise<void> {
     const channel = await interaction.guild?.channels.create({
       name: `cage-${interaction.user.displayName}`,
@@ -402,13 +411,17 @@ export class BindCommand {
     }
 
     const bondageDescription = this.createBondageDescription(answers);
+    const restrictions = this.getSessionRestrictions(answers);
 
     const session = await this.bondageService.startSession(
       interaction.user.id,
       interaction?.guildId ?? '',
       channel?.id,
       member,
-      bondageDescription,
+      {
+        bondageDescription,
+        ...restrictions,
+      },
     );
 
     const embed = createCustomSessionEmbed(session, answers);
@@ -417,5 +430,23 @@ export class BindCommand {
 
     await channel.send(`Hello <@${interaction.user.id}>`);
     await channel.send({ embeds: [embed] });
+  }
+
+  private getSessionRestrictions(answers: BindAnswer[]): {
+    gag: boolean;
+    blindfold: boolean;
+  } {
+    const selectedAnswers = answers.filter(
+      ({ answer }) => this.normalizeOption(answer) !== 'skip',
+    );
+
+    return {
+      gag: selectedAnswers.some(({ question }) =>
+        GAG_TARGETS.has(question.target),
+      ),
+      blindfold: selectedAnswers.some(
+        ({ question }) => question.target === 'Blindfold',
+      ),
+    };
   }
 }
