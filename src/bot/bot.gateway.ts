@@ -88,7 +88,9 @@ export class BotGateway {
           (message.content?.includes('secretcode') ?? false) ||
           (message.content?.includes('secretCode') ?? false) ||
           (message.content?.includes('SecretCode') ?? false) ||
-          (message.content?.includes('Secretcode') ?? false)
+          (message.content?.includes('Secretcode') ?? false) ||
+          (message.content?.toLocaleLowerCase().includes('secret') ?? false) ||
+          (message.content?.toLocaleLowerCase().includes('code') ?? false)
         )
       ) {
         await message.reply(
@@ -235,10 +237,16 @@ function ageValidator(content: string) {
 
 function secretCodeValidator(content: string) {
   if (content.length === 0) return true;
-  const codeMatch = content.match(/secret\s*code\s*:?\s*[^a-zA-Z]*([^\n\r]+)/i);
+  const codeMatch = content.match(
+    /\b(?:secret\s*)?(?:code|word|words)\s*:?\s*[^a-zA-Z]*([^\n\r]+)/i,
+  );
   if (codeMatch != null) {
     const code = codeMatch[1].trim().toLowerCase().split('*')[0];
-    return !(code.includes('ball gag') || code.includes('ballgag'));
+    return !(
+      code.includes('ball gag') ||
+      code.includes('ballgag') ||
+      (code.includes('ball') && code.includes('gag'))
+    );
   }
   return true;
 }
