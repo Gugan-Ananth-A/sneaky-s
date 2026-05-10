@@ -29,7 +29,7 @@ export class BotGateway {
         )
       ) {
         await message.reply(
-          'You are missing to mention the name!\n*-# -- Please post the entire template again to verify --*',
+          'You are missing to mention the name!\n*-# -- Please copy & post the entire template again in the same format to verify --*',
         );
       } else if (
         !(
@@ -38,11 +38,11 @@ export class BotGateway {
         )
       ) {
         await message.reply(
-          'You are missing to mention the age!\n*-# -- Please post the entire template again to verify --*',
+          'You are missing to mention the age!\n*-# -- Please copy & post the entire template again in the same format to verify  --*',
         );
       } else if (ageValidator(message.content)) {
         await message.reply(
-          'Entered Age is not valid!\n*-# -- Please post the entire template again to verify --*',
+          'Entered Age is not valid!\n*-# -- Please copy & post the entire template again in the same format to verify  --*',
         );
       } else if (
         !(
@@ -51,7 +51,7 @@ export class BotGateway {
         )
       ) {
         await message.reply(
-          'You are missing to mention the gender!\n*-# -- Please post the entire template again to verify --*',
+          'You are missing to mention the gender!\n*-# -- Please copy & post the entire template again in the same format to verify  --*',
         );
       } else if (
         !(
@@ -62,7 +62,7 @@ export class BotGateway {
         )
       ) {
         await message.reply(
-          'You are missing to mention the kinks!\n*-# -- Please post the entire template again to verify --*',
+          'You are missing to mention the kinks!\n*-# -- Please copy & post the entire template again in the same format to verify  --*',
         );
       } else if (
         !(
@@ -73,11 +73,11 @@ export class BotGateway {
         )
       ) {
         await message.reply(
-          'You are missing to mention the limits!\n*-# -- Please post the entire template again to verify --*',
+          'You are missing to mention the limits!\n*-# -- Please copy & post the entire template again in the same format to verify  --*',
         );
       } else if (message.author.avatar === null) {
         await message.reply(
-          "It seems you don't have a discord profile picture!\n*-# -- Please add a profile picture, and post the entire template again to verify --*",
+          "It seems you don't have a discord profile picture!\n*-# -- Please add a profile picture, and then, copy & post the entire template again in the same format to verify  --*",
         );
       } else if (
         !(
@@ -94,11 +94,11 @@ export class BotGateway {
         )
       ) {
         await message.reply(
-          'You are missing to mention the secret code!\n*-# -- Please post the entire template again to verify --*',
+          'You are missing to mention the secret code!\n*-# -- Please copy & post the entire template again in the same format to verify  --*',
         );
       } else if (secretCodeValidator(message.content)) {
         await message.reply(
-          'Your secret code is not valid. Please check the rules again to find the secret code!\n-# *-- There are 2 words hidden somewhere in the rules --*\n*-# -- Please post the entire template again to verify --*',
+          'Your secret code is not valid. Please check the rules again to find the secret code!\n-# *-- There are 2 words hidden somewhere in the rules --*\n*-# -- Please copy & post the entire template again in the same format to verify  --*',
         );
       } else if (
         !(
@@ -108,33 +108,29 @@ export class BotGateway {
         )
       ) {
         await message.reply(
-          'Have you grabbed Roles? It seems you are missing roles... \n*-# -- Grab the roles you missed to grab, and please post the entire template again to verify --*',
+          'Have you grabbed Roles? It seems you are missing roles... \n*-# -- Grab the roles you missed to grab, and please copy & post the entire template again in the same format to verify  --*',
+        );
+      } else if (bondageImageValidator(message)) {
+        await message.reply(
+          'You are missing to add your favourite bondage image!\n*-# -- Please copy & post the entire template again in the same format to verify  --*',
         );
       } else if (
         !(
-          (message.content
-            ?.toLocaleLowerCase()
-            .includes('favourite bondage image') ??
-            false) ||
-          (message.content?.toLocaleLowerCase().includes('favourite bondage') ??
-            false) ||
-          (message.content?.toLocaleLowerCase().includes('bondage image') ??
-            false) ||
-          (message.content
-            ?.toLocaleLowerCase()
-            .includes('favorite bondage image') ??
-            false) ||
-          (message.content?.toLocaleLowerCase().includes('favorite bondage') ??
-            false) ||
-          (message.content?.toLocaleLowerCase().includes('fav') ?? false)
+          message.content.toLocaleLowerCase().includes('important') ||
+          message.content.toLocaleLowerCase().includes('role') ||
+          message.content.toLocaleLowerCase().includes('word')
         )
       ) {
         await message.reply(
-          'You are missing to add your favourite bondage image!\n*-# -- Please post the entire template again to verify --*',
+          'You are missing to add the important rule!\n*-# -- Please copy & post the entire template again in the same format to verify  --*',
+        );
+      } else if (importantRuleValidator(message)) {
+        await message.reply(
+          'The important rule might be wrong or missing important details!\n*-# -- Please use the exact terms. Copy & post the entire template again in the same format to verify  --*',
         );
       } else {
         await message.react('✅');
-        await message.member.roles.add('1409579308934234195');
+        await message.member?.roles.add('1409579308934234195');
       }
     } else {
       const cageChannel = await this.bondageService.isCageChannel(
@@ -246,6 +242,35 @@ function secretCodeValidator(content: string) {
       code.includes('ball gag') ||
       code.includes('ballgag') ||
       (code.includes('ball') && code.includes('gag'))
+    );
+  }
+  return true;
+}
+
+function bondageImageValidator(message: Message<boolean>) {
+  const content = message.content?.toLowerCase() || '';
+  const hasKeyword =
+    content.includes('favourite') ||
+    content.includes('favorite') ||
+    content.includes('image') ||
+    content.includes('fav');
+  const hasLink = /(https?:\/\/[^\s]+)/g.test(content);
+  const hasAttachments = message.attachments.size > 0;
+  return !(hasKeyword || hasLink || hasAttachments);
+}
+
+function importantRuleValidator(message: Message<boolean>) {
+  const content = message.content?.toLowerCase() || '';
+  const codeMatch = content.match(
+    /\b(?:important\s+)?(?:rule|rules|word|words)\s*:?\s*([^\n\r]+)/i,
+  );
+  if (codeMatch != null) {
+    const code = codeMatch[1].trim().toLowerCase().split('*')[0];
+    return !(
+      code.includes('dm') &&
+      code.includes('server') &&
+      code.includes('role') &&
+      code.includes('ask')
     );
   }
   return true;

@@ -396,6 +396,10 @@ export class BindCommand {
           deny: ['ViewChannel'],
         },
         {
+          id: '1500220457843032214',
+          allow: ['ViewChannel', 'SendMessages'],
+        },
+        {
           id: interaction.user.id,
           allow: ['ViewChannel', 'SendMessages', 'UseApplicationCommands'],
         },
