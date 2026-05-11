@@ -261,17 +261,10 @@ function bondageImageValidator(message: Message<boolean>) {
 
 function importantRuleValidator(message: Message<boolean>) {
   const content = message.content?.toLowerCase() || '';
-  const codeMatch = content.match(
-    /\b(?:important\s+)?(?:rule|rules|word|words)\s*:?\s*([^\n\r]+)/i,
+  return !(
+    content.includes('dm') &&
+    content.includes('server') &&
+    content.includes('role') &&
+    content.includes('ask')
   );
-  if (codeMatch != null) {
-    const code = codeMatch[1].trim().toLowerCase().split('*')[0];
-    return !(
-      code.includes('dm') &&
-      code.includes('server') &&
-      code.includes('role') &&
-      code.includes('ask')
-    );
-  }
-  return true;
 }
