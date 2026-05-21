@@ -6,6 +6,7 @@ import { UserService } from './user.service';
 import { UserSettingsCommand } from './user.command';
 import { ReflectMetadataProvider } from 'node_modules/@discord-nestjs/core/dist';
 import { UserProfileCommand } from './profile.command';
+import { CleanupService } from './cleanup.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserSettings, ActiveSession])],
@@ -13,6 +14,7 @@ import { UserProfileCommand } from './profile.command';
     UserService,
     UserSettingsCommand,
     UserProfileCommand,
+    CleanupService,
     ReflectMetadataProvider,
   ],
 })
