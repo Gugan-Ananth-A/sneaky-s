@@ -7,9 +7,13 @@ import { UserSettingsCommand } from './user.command';
 import { ReflectMetadataProvider } from 'node_modules/@discord-nestjs/core/dist';
 import { UserProfileCommand } from './profile.command';
 import { CleanupService } from './cleanup.service';
+import { SharedDiscordModule } from 'src/helper/shared-discord.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserSettings, ActiveSession])],
+  imports: [
+    TypeOrmModule.forFeature([UserSettings, ActiveSession]),
+    SharedDiscordModule,
+  ],
   providers: [
     UserService,
     UserSettingsCommand,
