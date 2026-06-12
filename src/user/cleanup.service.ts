@@ -13,7 +13,7 @@ export class CleanupService {
 
   constructor(@InjectDiscordClient() private readonly client: Client) {}
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_HOUR)
   async handleCleanup(): Promise<void> {
     this.logger.log('Starting scheduled cleanup...');
 

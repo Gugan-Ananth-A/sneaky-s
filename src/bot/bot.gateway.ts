@@ -202,6 +202,22 @@ function getPersonaName(member: GuildMember): string {
 
 function garbleText(message: Message) {
   const text = message.content;
+  const trimmed = text.trim();
+
+  // Do not garble roleplay actions formatted as Discord italics (*action* or _action_).
+  // These represent actions/descriptions rather than spoken words affected by a gag.
+  const isItalicAction =
+    trimmed.length > 2 &&
+    ((trimmed.startsWith('*') &&
+      trimmed.endsWith('*') &&
+      trimmed[1] !== '*') ||
+      (trimmed.startsWith('_') &&
+        trimmed.endsWith('_') &&
+        trimmed[1] !== '_'));
+
+  if (isItalicAction) {
+    return text;
+  }
 
   const vowels = 'aeiou';
   const muffledSounds = ['m', 'n', 'ng', 'mm', 'nn'];
