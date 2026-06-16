@@ -1,11 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Once, InjectDiscordClient, On } from '@discord-nestjs/core';
-import { Client, GuildMember, Message, TextChannel } from 'discord.js';
+import { Client, GuildMember, Message, TextChannel, Webhook } from 'discord.js';
 import { BondageService } from 'src/bondage/bondage.service';
 
 @Injectable()
 export class BotGateway {
   private readonly logger = new Logger(BotGateway.name);
+  private readonly webhookCache = new Map<string, Webhook>();
 
   constructor(
     @InjectDiscordClient()
@@ -147,41 +148,66 @@ export class BotGateway {
         ((cageChannel?.gag ?? false) || (cageChannel?.blindfold ?? false)) &&
         message.channel instanceof TextChannel
       ) {
-        await message.delete().catch(() => null);
+        const channel = message.channel;
 
         if (
           (cageChannel?.gag ?? false) &&
           cageChannel?.userId === message.author.id
         ) {
-          const webhook = await message.channel.createWebhook({
-            name: message.member?.displayName || message.author.username,
-            avatar: message.author.displayAvatarURL(),
-          });
           const garbledText = garbleText(message);
-          await webhook.send({
-            content: garbledText,
-          });
+          const webhook = await this.getOrCreateWebhook(
+            channel,
+            message.member?.displayName || message.author.username,
+            message.author.displayAvatarURL(),
+          );
 
-          await webhook.delete();
+          await Promise.all([
+            message.delete().catch(() => null),
+            webhook.send({ content: garbledText }),
+          ]);
           return;
         } else if (
           (cageChannel?.blindfold ?? false) &&
           cageChannel?.userId !== message.author.id
         ) {
-          const webhook = await message.channel.createWebhook({
-            name: getPersonaName(message.member as GuildMember),
-            avatar: message.author.displayAvatarURL(),
-          });
+          const member = message.member;
+          if (!member) {
+            await message.delete().catch(() => null);
+            return;
+          }
 
-          await webhook.send({
-            content: message.content,
-          });
+          const webhook = await this.getOrCreateWebhook(
+            channel,
+            getPersonaName(member),
+            message.author.displayAvatarURL(),
+          );
 
-          await webhook.delete();
+          await Promise.all([
+            message.delete().catch(() => null),
+            webhook.send({ content: message.content }),
+          ]);
           return;
         }
+
+        await message.delete().catch(() => null);
       }
     }
+  }
+
+  private async getOrCreateWebhook(
+    channel: TextChannel,
+    name: string,
+    avatarUrl: string,
+  ): Promise<Webhook> {
+    const cacheKey = `${channel.id}:${name}`;
+    const cached = this.webhookCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const webhook = await channel.createWebhook({ name, avatar: avatarUrl });
+    this.webhookCache.set(cacheKey, webhook);
+    return webhook;
   }
 }
 
@@ -208,12 +234,8 @@ function garbleText(message: Message) {
   // These represent actions/descriptions rather than spoken words affected by a gag.
   const isItalicAction =
     trimmed.length > 2 &&
-    ((trimmed.startsWith('*') &&
-      trimmed.endsWith('*') &&
-      trimmed[1] !== '*') ||
-      (trimmed.startsWith('_') &&
-        trimmed.endsWith('_') &&
-        trimmed[1] !== '_'));
+    ((trimmed.startsWith('*') && trimmed.endsWith('*') && trimmed[1] !== '*') ||
+      (trimmed.startsWith('_') && trimmed.endsWith('_') && trimmed[1] !== '_'));
 
   if (isItalicAction) {
     return text;

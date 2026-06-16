@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ActiveSession } from './active-session.entity';
-import { Repository } from 'node_modules/typeorm';
+import { Repository } from 'typeorm';
 import { UserSettings } from 'src/user/user-settings.entity';
 import { scenarios } from './scenarios';
 import { Client, GuildMember } from 'discord.js';
