@@ -179,7 +179,7 @@ export class BotGateway {
           const webhook = await this.getOrCreateWebhook(
             channel,
             getPersonaName(member),
-            message.author.displayAvatarURL(),
+            getPersonaAvatar(member),
           );
 
           await Promise.all([
@@ -211,7 +211,28 @@ export class BotGateway {
   }
 }
 
-function getPersonaName(member: GuildMember): string {
+const PERSONA_AVATARS: Record<string, Record<string, string>> = {
+  dominant: {
+    male: 'https://i.pinimg.com/736x/62/3c/01/623c01462eb3f1a73fe8f5ba351ee0bd.jpg',
+    female:
+      'https://i.pinimg.com/1200x/bb/73/9e/bb739edbcb37cca64c6192f47087456d.jpg',
+  },
+  submissive: {
+    male: 'https://i.pinimg.com/1200x/4c/e7/8a/4ce78ab700b0f8666f9800225dd851fe.jpg',
+    female:
+      'https://i.pinimg.com/736x/18/9e/cb/189ecb874785c12bf08082ee1ac02635.jpg',
+  },
+  switch: {
+    male: 'https://i.pinimg.com/736x/b8/50/13/b850130b5c04fcce0c29aeb54481812d.jpg',
+    female:
+      'https://i.pinimg.com/736x/cb/0a/29/cb0a298f5910d76db400832f997b50f1.jpg',
+  },
+};
+
+function getPersonaRoles(member: GuildMember): {
+  power: string;
+  identity: string;
+} {
   const roles = member.roles.cache.map((r) => r.name.toLowerCase());
 
   const powerRoles = ['dominant', 'submissive', 'switch'];
@@ -220,10 +241,22 @@ function getPersonaName(member: GuildMember): string {
   const power = powerRoles.find((r) => roles.includes(r));
   const identity = identityRoles.find((r) => roles.includes(r));
 
-  const finalPower = power ?? 'mysterious';
-  const finalIdentity = identity ?? 'being';
+  return {
+    power: power ?? 'mysterious',
+    identity: identity ?? 'being',
+  };
+}
 
-  return `A ${finalPower} ${finalIdentity}`;
+function getPersonaName(member: GuildMember): string {
+  const { power, identity } = getPersonaRoles(member);
+  return `A ${power} ${identity}`;
+}
+
+function getPersonaAvatar(member: GuildMember): string {
+  const { power, identity } = getPersonaRoles(member);
+  return (
+    PERSONA_AVATARS[power]?.[identity] ?? member.displayAvatarURL()
+  );
 }
 
 function garbleText(message: Message) {
