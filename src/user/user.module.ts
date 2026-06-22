@@ -7,6 +7,7 @@ import { UserSettingsCommand } from './user.command';
 import { ReflectMetadataProvider } from 'node_modules/@discord-nestjs/core/dist';
 import { UserProfileCommand } from './profile.command';
 import { CleanupService } from './cleanup.service';
+import { RoleSeparatorService } from './role_separator.service';
 import { SharedDiscordModule } from 'src/helper/shared-discord.module';
 
 @Module({
@@ -19,6 +20,7 @@ import { SharedDiscordModule } from 'src/helper/shared-discord.module';
     UserSettingsCommand,
     UserProfileCommand,
     CleanupService,
+    RoleSeparatorService,
     ReflectMetadataProvider,
   ],
 })

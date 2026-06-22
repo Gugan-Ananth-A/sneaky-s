@@ -254,9 +254,7 @@ function getPersonaName(member: GuildMember): string {
 
 function getPersonaAvatar(member: GuildMember): string {
   const { power, identity } = getPersonaRoles(member);
-  return (
-    PERSONA_AVATARS[power]?.[identity] ?? member.displayAvatarURL()
-  );
+  return PERSONA_AVATARS[power]?.[identity] ?? member.displayAvatarURL();
 }
 
 function garbleText(message: Message) {
