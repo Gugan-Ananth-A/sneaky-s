@@ -1,7 +1,12 @@
 import { Command, Handler, InteractionEvent } from '@discord-nestjs/core/dist';
 import { SlashCommandPipe } from '@discord-nestjs/common';
 import { Injectable, PipeTransform, Type } from '@nestjs/common';
-import { ChatInputCommandInteraction, GuildMember } from 'discord.js';
+import {
+  ChatInputCommandInteraction,
+  GuildMember,
+  OverwriteResolvable,
+  PermissionFlagsBits,
+} from 'discord.js';
 import { BondageService } from './bondage.service';
 import { createSessionEmbed } from 'src/helper/embed-builder';
 import { BindMeDto } from './dto/bind-me.dto';
@@ -23,6 +28,7 @@ export class BondageCommand {
     await interaction.deferReply();
     try {
       const member = interaction.member as GuildMember;
+      const isPrivateCage = this.isYes(options?.privateCage);
 
       const existingSession = await this.bondageService.getActiveSession(
         interaction.user.id,
@@ -35,26 +41,37 @@ export class BondageCommand {
         });
         return;
       }
+      const permissionOverwrites: OverwriteResolvable[] = [
+        {
+          id: interaction.guild!.id,
+          deny: [PermissionFlagsBits.ViewChannel],
+        },
+        {
+          id: interaction.user.id,
+          allow: [
+            PermissionFlagsBits.ViewChannel,
+            PermissionFlagsBits.SendMessages,
+            PermissionFlagsBits.UseApplicationCommands,
+          ],
+        },
+      ];
+
+      if (!isPrivateCage) {
+        permissionOverwrites.push({
+          id: '1500220457843032214',
+          allow: [
+            PermissionFlagsBits.ViewChannel,
+            PermissionFlagsBits.SendMessages,
+          ],
+        });
+      }
 
       const channel = await interaction.guild?.channels.create({
         name: `cage-${interaction.user.displayName}`,
         nsfw: true,
         type: 0,
         parent: '1497956351480041632',
-        permissionOverwrites: [
-          {
-            id: interaction.guild.id,
-            deny: ['ViewChannel'],
-          },
-          {
-            id: '1500220457843032214',
-            allow: ['ViewChannel', 'SendMessages'],
-          },
-          {
-            id: interaction.user.id,
-            allow: ['ViewChannel', 'SendMessages', 'UseApplicationCommands'],
-          },
-        ],
+        permissionOverwrites,
       });
 
       if (!channel) {

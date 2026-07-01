@@ -9,7 +9,7 @@ import {
 import { createCustomSessionEmbed } from 'src/helper/embed-builder';
 import { BondageService } from './bondage.service';
 
-const QUESTION_TIMEOUT_MS = 20_000;
+const QUESTION_TIMEOUT_MS = 50_000;
 
 type BindQuestion = {
   target: string;
@@ -298,35 +298,40 @@ export class BindCommand {
     channel: GuildTextBasedChannel,
     question: BindQuestion,
   ): Promise<string | null> {
+    let endTime = Date.now() + QUESTION_TIMEOUT_MS;
     await interaction.followUp(
       `${'```'}${this.createQuestionText(question)}${'```'}`,
     );
 
-    const collected = await channel.awaitMessages({
-      filter: (message: Message) => message.author.id === interaction.user.id,
-      max: 1,
-      time: QUESTION_TIMEOUT_MS,
-    });
+    while (Date.now() < endTime) {
+      const collected = await channel.awaitMessages({
+        filter: (message: Message) => message.author.id === interaction.user.id,
+        max: 1,
+        time: QUESTION_TIMEOUT_MS,
+      });
 
-    const answer = collected.first()?.content.trim();
+      const answer = collected.first()?.content.trim();
 
-    if (!answer) {
+      if (!answer) {
+        break;
+      }
+
+      const matchedOption = this.matchOption(answer, question.options);
+
+      if (matchedOption) return matchedOption;
+
       await interaction.followUp(
-        'Binding setup collapsed because you took more than 20 seconds to answer...',
+        `\`${answer}\` is not one of the available options... Try again...`,
       );
-      return null;
+
+      endTime = Date.now() + QUESTION_TIMEOUT_MS;
     }
 
-    const matchedOption = this.matchOption(answer, question.options);
+    await interaction.followUp(
+      'Binding setup collapsed because you took more than 50 seconds to answer...',
+    );
 
-    if (!matchedOption) {
-      await interaction.followUp(
-        `Binding setup collapsed because \`${answer}\` is not one of the available options...`,
-      );
-      return null;
-    }
-
-    return matchedOption;
+    return null;
   }
 
   private createQuestionText(question: BindQuestion): string {

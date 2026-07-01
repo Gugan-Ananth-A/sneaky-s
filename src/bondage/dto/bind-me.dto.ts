@@ -20,4 +20,14 @@ export class BindMeDto {
       'If you want to get blindfolded for this session? (default: no)',
   })
   blindfold?: number;
+
+  @Choice(Yno)
+  @Param({
+    name: 'private-cage',
+    type: ParamType.INTEGER,
+    required: false,
+    description:
+      'If you want to get a private cage? (No one else can come in) (default: no)',
+  })
+  privateCage?: number;
 }
