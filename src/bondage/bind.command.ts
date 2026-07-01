@@ -5,6 +5,8 @@ import {
   GuildTextBasedChannel,
   GuildMember,
   Message,
+  PermissionFlagsBits,
+  ChannelType,
 } from 'discord.js';
 import { createCustomSessionEmbed } from 'src/helper/embed-builder';
 import { BondageService } from './bondage.service';
@@ -192,6 +194,12 @@ const BIND_QUESTIONS: readonly BindQuestion[] = [
   },
 ] as const;
 
+const PRIVATE_CAGE_QUESTION: BindQuestion = {
+  target: 'Private Cage',
+  prompt: 'Would you like a private cage?',
+  options: ['Yes', 'No'],
+};
+
 const READY_QUESTION: BindQuestion = {
   target: 'Ready',
   prompt: 'Are you ready?',
@@ -281,7 +289,17 @@ export class BindCommand {
         return;
       }
 
-      await this.createCageSession(interaction, member, answers);
+      const privateCageAnswer = await this.askQuestion(
+        interaction,
+        sourceChannel as GuildTextBasedChannel,
+        PRIVATE_CAGE_QUESTION,
+      );
+
+      if (!privateCageAnswer) return;
+
+      const isPrivateCage = this.normalizeOption(privateCageAnswer) === 'yes';
+
+      await this.createCageSession(interaction, member, answers, isPrivateCage);
     } catch (error) {
       console.log(error);
       await interaction.followUp({
@@ -389,26 +407,39 @@ export class BindCommand {
     interaction: ChatInputCommandInteraction,
     member: GuildMember,
     answers: BindAnswer[],
+    isPrivateCage: boolean,
   ): Promise<void> {
+    const permissionOverwrites = [
+      {
+        id: interaction.guild!.id,
+        deny: [PermissionFlagsBits.ViewChannel],
+      },
+      {
+        id: interaction.user.id,
+        allow: [
+          PermissionFlagsBits.ViewChannel,
+          PermissionFlagsBits.SendMessages,
+          PermissionFlagsBits.UseApplicationCommands,
+        ],
+      },
+    ];
+
+    if (!isPrivateCage) {
+      permissionOverwrites.push({
+        id: '1500220457843032214',
+        allow: [
+          PermissionFlagsBits.ViewChannel,
+          PermissionFlagsBits.SendMessages,
+        ],
+      });
+    }
+
     const channel = await interaction.guild?.channels.create({
       name: `cage-${interaction.user.displayName}`,
       nsfw: true,
-      type: 0,
+      type: ChannelType.GuildText,
       parent: '1497956351480041632',
-      permissionOverwrites: [
-        {
-          id: interaction.guild.id,
-          deny: ['ViewChannel'],
-        },
-        {
-          id: '1500220457843032214',
-          allow: ['ViewChannel', 'SendMessages'],
-        },
-        {
-          id: interaction.user.id,
-          allow: ['ViewChannel', 'SendMessages', 'UseApplicationCommands'],
-        },
-      ],
+      permissionOverwrites,
     });
 
     if (!channel) {
