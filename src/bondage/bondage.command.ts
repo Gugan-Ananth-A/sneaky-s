@@ -4,6 +4,7 @@ import { Injectable, PipeTransform, Type } from '@nestjs/common';
 import {
   ChatInputCommandInteraction,
   GuildMember,
+  GuildTextBasedChannel,
   OverwriteResolvable,
   PermissionFlagsBits,
 } from 'discord.js';
@@ -101,22 +102,26 @@ export class BondageCommand {
 
       if (channel && channel.isTextBased()) {
         if ((session.blindfold ?? false) && (session.gag ?? false)) {
-          await channel.send(
+          await this.sendLongMessage(
+            channel,
             `Hello <@${interaction.user.id}>~\n\n${session.bondageDescription}`,
           );
           await channel.send(
             `** **\n${session.gagDescription}\n\n${session.blindfoldDescription}`,
           );
         } else if (session.blindfold ?? false) {
-          await channel.send(
+          await this.sendLongMessage(
+            channel,
             `Hello <@${interaction.user.id}>~\n\n${session.bondageDescription}\n\n${session.blindfoldDescription}`,
           );
         } else if (session.gag ?? false) {
-          await channel.send(
+          await this.sendLongMessage(
+            channel,
             `Hello <@${interaction.user.id}>~\n\n${session.bondageDescription}\n\n${session.gagDescription}`,
           );
         } else {
-          await channel.send(
+          await this.sendLongMessage(
+            channel,
             `Hello <@${interaction.user.id}>~\n\n${session.bondageDescription}`,
           );
         }
@@ -132,5 +137,26 @@ export class BondageCommand {
 
   private isYes(value?: number): boolean {
     return value === 0;
+  }
+
+  private async sendLongMessage(
+    channel: GuildTextBasedChannel,
+    content: string,
+  ): Promise<void> {
+    const MAX_LENGTH = 1700;
+    let chunk = '';
+
+    for (const line of content.split('\n')) {
+      if ((chunk + '\n' + line).length > MAX_LENGTH) {
+        await channel.send(chunk);
+        chunk = line;
+      } else {
+        chunk += (chunk ? '\n' : '') + line;
+      }
+    }
+
+    if (chunk) {
+      await channel.send(chunk);
+    }
   }
 }
